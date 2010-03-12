@@ -1,0 +1,6 @@
+; $Id$
+name =  "Menu Trail By Path"
+description = "Set The Menu Trail By Path."
+package = UC Merced
+core = 6.x
+php = 5.1
