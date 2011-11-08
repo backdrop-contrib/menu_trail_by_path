@@ -1,48 +1,94 @@
 <?php
 /**
  * @file
- * Expand menu items and set active-trail according to the current path
+ * Expand menu items and set active-trail according to parents in current path
+ *
+ * Drupal default set active-trail for parent menu items only if 
+ * the menu contains a link to the current page.
+ * This module sets the active-trail according to the path alias
+ * for pages even if they are not in menu
+ * 
+ * eg. if current page is foo/bar/zee 
+ * foo and foo/bar menu items are set as active-trail
  */
 
 /**
  * Implement hook_init
- * Add Trail By Path checkbox to menu_block block configure page
  */
 function menu_trail_by_path_init() {
-  
-  $parent_candidates_alias = _get_parent_candidates(drupal_get_path_alias());
-  // don't even bother if current page is root
-  if (empty($parent_candidates_alias)) {
+  // Do nothing if current page is already in a menu
+  // if(current_page_is_already_in_a_menu) {
+    // return;
+  // }
+
+  $parent_candidates = _get_parent_candidates(drupal_get_path_alias());
+  // Don't even bother if current page is root
+  if (empty($parent_candidates)) {
     return;
   }
   
-  // convert alias path to normal drupal system path
-  $parent_candidates = array();
-  foreach ($parent_candidates_alias as $alias_path) {
+  // Convert alias path to normal drupal system path
+  $parent_candidates_normal_paths = array();
+  foreach ($parent_candidates as $alias_path) {
     // change alias to drupal system path
-    $parent_candidates[] = drupal_get_normal_path($alias_path);
+    $parent_candidates_normal_paths[] = drupal_get_normal_path($alias_path);
   }
   
-  // get the deepest menu item in each menu
-  // Todo: translate db_query() into db_select()
-  $result = db_query("SELECT m1.menu_name, m1.link_path FROM {menu_links} m1 INNER JOIN (SELECT menu_name, MAX(depth) AS max_depth FROM {menu_links} WHERE link_path IN (:candidates) GROUP BY menu_name) d1 ON m1.menu_name = d1.menu_name AND m1.depth = d1.max_depth WHERE m1.link_path IN (:candidates)", array(':candidates'=>$parent_candidates));
-  
-  // set the active-trail for each menu found
-  foreach ($result as $record) {
-    menu_tree_set_path($record->menu_name, $record->link_path);
+  // Find link items matching the parent candidates in all menus
+  $matched_menus = array();
+  $results = db_select('menu_links','ml')
+    ->fields('ml',array('menu_name','link_path','link_title','depth'))
+    ->condition('link_path',$parent_candidates_normal_paths,'IN')
+    ->execute();
+  foreach ($results as $record) {
+    
+    // Do not touch admin menus
+    if (in_array($record->menu_name, array('management','devel'))) {
+      continue;
+    }
+    
+    // If there is more than one matched link in a menu, use the deepest
+    elseif (!isset($matched_menus[$record->menu_name]) or $record->depth > $matched_menus[$record->menu_name]['depth']) {
+      $matched_menus[$record->menu_name]['link_path'] = $record->link_path;
+      $matched_menus[$record->menu_name]['depth'] = $record->depth;
+    }
+    
   }
   
-  // Todo: Fix Breadcrumbs as well.
-  
+  // Set the active-trail for each menu containing one of the candidates
+  foreach ($matched_menus as $menu_name => $menu_link) {
+    menu_tree_set_path($menu_name, $menu_link['link_path']);
+  }
+
+  // Fix Breadcrumb as well. 
+  // Todo: allow to disable Breadcrumb via admin UI
+  if (TRUE) {
+    // First breadcrumbs is always Home
+    $breadcrumbs[] = l(t('Home'),'/');
+    // Remove current page from breadcrumb
+    array_pop($parent_candidates_normal_paths);
+
+    foreach($parent_candidates_normal_paths as $link_path) {
+      // Slow method to find out the title of page linked to?
+      $menu_item = menu_get_item($link_path);
+      dpm($menu_item);
+      if($menu_item) {
+        $breadcrumbs[] = l($menu_item['title'],$link_path);
+      }
+    }
+    drupal_set_breadcrumb($breadcrumbs);
+  }
+
+  //Todo: Multilingual site
 }
 
 /**
  * Return an array of candidate paths
  * e.g. for a path 'foo/bar/zee' 
- * candidates are 'foo/bar/zee', 'foo/bar', 'foo'
+ * return candidates 'foo', 'foo/bar', 'foo/bar/zee'
  */
 function _get_parent_candidates($path = NULL) {
-  if ($path == NULL) {
+  if (!isset($path)) {
     $path = request_path();
   }
   $pieces = explode('/', $path);
@@ -50,7 +96,7 @@ function _get_parent_candidates($path = NULL) {
   $parent_candidates = array();
   foreach ($pieces as $piece) {
     $path .= $piece . '/';
-    array_unshift($parent_candidates, rtrim($path, '/'));
+    $parent_candidates[] = rtrim($path, '/');
   }
   return $parent_candidates;
 }
