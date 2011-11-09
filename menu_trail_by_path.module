@@ -5,11 +5,11 @@
  *
  * Drupal default set active-trail for parent menu items only if 
  * the menu contains a link to the current page.
- * This module sets the active-trail according to the path alias
- * for pages even if they are not in menu
+ * This module sets the active-trail according to the path URL
+ * It works for pages even if they are not in menu
  * 
  * eg. if current page is foo/bar/zee 
- * foo and foo/bar menu items are set as active-trail
+ * foo & foo/bar menu items are set as active-trail and expanded
  */
 
 /**
@@ -60,8 +60,8 @@ function menu_trail_by_path_init() {
     menu_tree_set_path($menu_name, $menu_link['link_path']);
   }
 
-  // Fix Breadcrumb as well. 
-  // Todo: allow to disable Breadcrumb via admin UI
+  // Also set breadcrumb according to path URL as well
+  // Todo: allow to disable Breadcrumb handling via admin UI
   if (TRUE) {
     // First breadcrumbs is always Home
     $breadcrumbs[] = l(t('Home'),'/');
@@ -71,7 +71,6 @@ function menu_trail_by_path_init() {
     foreach($parent_candidates_normal_paths as $link_path) {
       // Slow method to find out the title of page linked to?
       $menu_item = menu_get_item($link_path);
-      dpm($menu_item);
       if($menu_item) {
         $breadcrumbs[] = l($menu_item['title'],$link_path);
       }
