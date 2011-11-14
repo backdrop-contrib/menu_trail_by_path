@@ -41,7 +41,7 @@ function menu_trail_by_path_init() {
     ->condition('link_path',$parent_candidates_normal_paths,'IN')
     ->execute();
   foreach ($results as $record) {
-    
+
     // Do not touch admin menus
     if (in_array($record->menu_name, array('management','devel'))) {
       continue;
@@ -53,6 +53,10 @@ function menu_trail_by_path_init() {
       $matched_menus[$record->menu_name]['depth'] = $record->depth;
     }
     
+    // Get the Link Title if it can be found in a menu item
+    if ($record->link_title AND !isset($matched_link_title[$record->link_path])) {
+      $matched_link_title[$record->link_path] = $record->link_title;
+    }
   }
   
   // Set the active-trail for each menu containing one of the candidates
@@ -69,9 +73,12 @@ function menu_trail_by_path_init() {
     array_pop($parent_candidates_normal_paths);
 
     foreach($parent_candidates_normal_paths as $link_path) {
-      // Slow method to find out the title of page linked to?
-      $menu_item = menu_get_item($link_path);
-      if($menu_item) {
+      // If title of the page is found on a menu item, use it
+      if ($matched_link_title[$link_path]) {
+        $breadcrumbs[] = l($matched_link_title[$link_path],$link_path);
+      }
+      // Otherwise, use slow method to find out the title of page
+      elseif ($menu_item = menu_get_item($link_path)) {
         $breadcrumbs[] = l($menu_item['title'],$link_path);
       }
     }
