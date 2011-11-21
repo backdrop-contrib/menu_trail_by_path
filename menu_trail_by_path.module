@@ -59,7 +59,7 @@ function menu_trail_by_path_init() {
   if (TRUE) {
   
     // First breadcrumbs is always Home
-    $breadcrumbs[] = l(t('Home'),'/');
+    $breadcrumbs[] = l(t('Home'),'<front>');
     // Remove current page from breadcrumb
     array_pop($parent_candidates);
 
