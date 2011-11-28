@@ -56,7 +56,7 @@ function menu_trail_by_path_init() {
 
   // Also set breadcrumb according to path URL as well
   // Todo: allow to disable Breadcrumb handling via admin UI
-  if (TRUE) {
+  if (variable_get('menu_trail_by_path_breadcrumb_handling', TRUE)) {
   
     // First breadcrumbs is always Home
     $breadcrumbs[] = l(t('Home'),'<front>');
@@ -79,6 +79,49 @@ function menu_trail_by_path_init() {
 
   //Todo: Multilingual site
 }
+
+/**
+ * Implements hook_permission().
+ */
+function menu_trail_by_path_permission() {
+  return array(
+    'administer menu_trail_by_path' => array(
+      'title' => t('Administer Menu Trail By Path settings'),
+    ),
+  );
+}
+
+/**
+ * Implement hook_menu().
+ */
+function menu_trail_by_path_menu() {
+  $items = array();
+  $items['admin/structure/menu_trail_by_path'] = array(
+    'title' => 'Menu trail by path',
+    'description' => 'Configure menu trail by path module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('menu_trail_by_path_form'),
+    'access arguments' => array('administer menu_trail_by_path'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+ return $items;
+}
+
+/**
+ * Form builder; Create and display the admin configuration settings form.
+ */
+function menu_trail_by_path_form($form, &$form_state) {
+  
+  $form['menu_trail_by_path_breadcrumb_handling'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable breadcrumb handling'),
+    '#description' => t("If checked, Menu Trail By Path will take over breadcrumb handling."),
+		'#default_value' => variable_get('menu_trail_by_path_breadcrumb_handling', TRUE),
+  );
+
+ return system_settings_form($form);
+}
+
 
 /**
  * Return an array of parent candidates
