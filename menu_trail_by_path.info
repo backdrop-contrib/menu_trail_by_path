@@ -5,3 +5,4 @@ core = 7.x
 dependencies[] = menu
 dependencies[] = path
 dependencies[] = system (>=7.12)
+configure = admin/structure/menu_trail_by_path

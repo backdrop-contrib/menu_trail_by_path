@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Expand menu items and set active-trail according to parents in current path
+ * Expand menu items and set active-trail according to current path
  *
  * Drupal default set active-trail for parent menu items only if
  * the menu contains a link to the current page.
@@ -17,7 +17,7 @@
  * Implements hook_init().
  */
 function menu_trail_by_path_init() {
-  $parent_candidates = _get_parent_candidates(drupal_get_path_alias());
+  $parent_candidates = _menu_trail_by_path_get_parent_candidates();
   // Don't even bother if current page is root
   if (empty($parent_candidates)) {
     return;
@@ -114,20 +114,19 @@ function menu_trail_by_path_form($form, &$form_state) {
   $form['menu_trail_by_path_breadcrumb_handling'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable breadcrumb handling'),
-    '#description' => t("If checked, Menu Trail By Path will take over breadcrumb handling."),
+    '#description' => t("If checked, breadcrumb will be set according to url path."),
 		'#default_value' => variable_get('menu_trail_by_path_breadcrumb_handling', TRUE),
   );
 
  return system_settings_form($form);
 }
 
-
 /**
  * Return an array of parent candidates
  * e.g. for path 'foo/bar/zee'
  * return array of internal drupal paths for 'foo', 'foo/bar', 'foo/bar/zee'
  */
-function _get_parent_candidates($path = NULL) {
+function _menu_trail_by_path_get_parent_candidates($path = NULL) {
   if (!isset($path)) {
     $path = request_path();
   }
