@@ -1,6 +1,7 @@
 name =  "Menu Trail By Path"
-description = "Expand menus and set active-trail  according to the current path. <strong>Require Drupal 7.9+</strong>"
+description = "Expand menus and set active-trail according to the current path. <strong>Requires Drupal 7.12+</strong>"
 package = Other
 core = 7.x
 dependencies[] = menu
 dependencies[] = path
+dependencies[] = system (>=7.12)
