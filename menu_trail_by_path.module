@@ -85,27 +85,16 @@ function menu_trail_by_path_page_delivery_callback_alter() {
 }
 
 /**
- * Implements hook_permission().
- */
-function menu_trail_by_path_permission() {
-  return array(
-    'administer menu_trail_by_path' => array(
-      'title' => t('Administer Menu Trail By Path settings'),
-    ),
-  );
-}
-
-/**
  * Implements hook_menu().
  */
 function menu_trail_by_path_menu() {
   $items = array();
-  $items['admin/structure/menu_trail_by_path'] = array(
+  $items['admin/config/search/menu_trail_by_path'] = array(
     'title' => 'Menu trail by path',
     'description' => 'Configure menu trail by path module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('menu_trail_by_path_form'),
-    'access arguments' => array('administer menu_trail_by_path'),
+    'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
   );
   return $items;
