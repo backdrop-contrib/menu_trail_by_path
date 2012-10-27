@@ -32,17 +32,19 @@ function menu_trail_by_path_page_delivery_callback_alter() {
   $matched_menus = array();
   $matched_link_titles = array();
   $results = db_select('menu_links', 'ml')
-    ->fields('ml', array('menu_name', 'mlid', 'link_path', 'link_title', 'depth'))
+    ->fields('ml', array('menu_name', 'mlid', 'link_path', 'link_title', 'depth', 'weight'))
     ->condition('link_path', $parent_candidates, 'IN')
     // Do not touch admin menu.
     ->condition('menu_name', 'management', '!=')
     ->execute();
 
   foreach ($results as $record) {
-    // If there is more than one matched link in a menu, use the deepest.
-    if (!isset($matched_menus[$record->menu_name]) || $record->depth > $matched_menus[$record->menu_name]['depth']) {
+    // If there is more than one matched link in a menu,
+    // use the deepest, heaviest.
+    if (!isset($matched_menus[$record->menu_name]) || $record->depth > $matched_menus[$record->menu_name]['depth'] || ($record->depth == $matched_menus[$record->menu_name]['depth'] && $record->weight > $matched_menus[$record->menu_name]['weight'])) {
       $matched_menus[$record->menu_name]['link_path'] = $record->link_path;
       $matched_menus[$record->menu_name]['depth'] = $record->depth;
+      $matched_menus[$record->menu_name]['weight'] = $record->weight;
     }
 
     // Get the Link Title if it can be found in a menu item.
