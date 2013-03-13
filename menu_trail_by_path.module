@@ -36,6 +36,8 @@ function menu_trail_by_path_page_delivery_callback_alter() {
     ->condition('link_path', $parent_candidates, 'IN')
     // Do not touch admin menu.
     ->condition('menu_name', 'management', '!=')
+    // Only consider normal, visible menu links.
+    ->condition('hidden', 0)
     ->execute();
 
   foreach ($results as $record) {
