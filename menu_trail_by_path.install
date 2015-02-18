@@ -1,0 +1,17 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the Menu Trail By Path module.
+ */
+
+/**
+ * Move settings from variables to config.
+ */
+function menu_trail_by_path_update_1000() {
+  // Migrate variable to config.
+  config_set('menu_trail_by_path.settings', 'breadcrumb_handling', update_variable_get('menu_trail_by_path_breadcrumb_handling', TRUE));
+
+  // Delete variable.
+  update_variable_del('menu_trail_by_path_breadcrumb_handling');
+}
+

@@ -1,17 +1,67 @@
 <?php
-
 /**
  * @file
  * Expand menu items and set active-trail according to current path.
- *
- * By default, Drupal only sets the active-trail for parent menu items if the
- * menu contains a link to the current page. This module sets the active-trail
- * according to the path URL. It works for all pages, even if they are not in
- * the menu.
- *
- * eg. if current page is 'foo/bar/zee',
- * menu items 'foo' and 'foo/bar' will be set as active-trail and expanded.
  */
+
+/**
+ * Implements hook_config_info().
+ */
+function menu_trail_by_path_config_info() {
+  $prefixes['menu_trail_by_path.settings'] = array(
+    'label' => t('Menu trail by path settings'),
+    'group' => t('Configuration'),
+  );
+
+  return $prefixes;
+}
+
+/**
+ * Implements hook_menu()
+ */
+function menu_trail_by_path_menu() {
+  $items['admin/config/system/menu_trail_by_path'] = array(
+    'title' => 'Menu trail by path',
+    'description' => 'Configure menu trail by path module.',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('menu_trail_by_path_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Form builder; create and display the admin configuration settings form.
+ */
+function menu_trail_by_path_form($form, &$form_state) {
+  $form['breadcrumb_handling'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable breadcrumb handling'),
+    '#description' => t("If checked, breadcrumb will be set according to url path."),
+    '#default_value' => config_get('menu_trail_by_path.settings', 'breadcrumb_handling'),
+  );
+
+  // Add a submit button.
+  $form['actions'] = array(
+    '#type' => 'actions',
+    'submit' => array(
+      '#type' => 'submit',
+      '#value' => t('Save configuration'),
+    ),
+  );
+
+  return $form;
+}
+
+/**
+ * Submit handler for menu_trail_by_path_form().
+ */
+function menu_trail_by_path_form_submit($form, &$form_state) {
+  config_set('menu_trail_by_path.settings', 'breadcrumb_handling', $form_state['values']['breadcrumb_handling']);
+  backdrop_set_message(t('The configuration options have been saved.'));
+}
 
 /**
  * Implements hook_page_delivery_callback_alter().
@@ -22,7 +72,8 @@
  */
 function menu_trail_by_path_page_delivery_callback_alter() {
   global $language;
-  $parent_candidates = _menu_trail_by_path_get_parent_candidates(drupal_get_path_alias());
+
+  $parent_candidates = _menu_trail_by_path_get_parent_candidates(backdrop_get_path_alias());
   // Don't even bother if current page is root.
   if (empty($parent_candidates)) {
     return;
@@ -41,8 +92,7 @@ function menu_trail_by_path_page_delivery_callback_alter() {
     ->execute();
 
   foreach ($results as $record) {
-    // If there is more than one matched link in a menu,
-    // use the deepest, heaviest.
+    // If there is more than one matched link in a menu, use the deepest.
     if (!isset($matched_menus[$record->menu_name]) || $record->depth > $matched_menus[$record->menu_name]['depth'] || ($record->depth == $matched_menus[$record->menu_name]['depth'] && $record->weight > $matched_menus[$record->menu_name]['weight'])) {
       $matched_menus[$record->menu_name]['link_path'] = $record->link_path;
       $matched_menus[$record->menu_name]['depth'] = $record->depth;
@@ -64,7 +114,7 @@ function menu_trail_by_path_page_delivery_callback_alter() {
   }
 
   // Set the breadcrumbs according to path URL if it is enabled in the UI.
-  if (variable_get('menu_trail_by_path_breadcrumb_handling', TRUE)) {
+  if (config_get('menu_trail_by_path.settings', 'breadcrumb_handling')) {
     // First breadcrumb is always Home.
     $breadcrumbs[] = l(t('Home'), '<front>');
 
@@ -81,58 +131,32 @@ function menu_trail_by_path_page_delivery_callback_alter() {
         $breadcrumbs[] = l($menu_item['title'], $link_path);
       }
     }
-    drupal_set_breadcrumb($breadcrumbs);
+    backdrop_set_breadcrumb($breadcrumbs);
   }
 }
 
 /**
- * Implements hook_menu()
- */
-function menu_trail_by_path_menu() {
-  $items = array();
-  $items['admin/config/search/menu_trail_by_path'] = array(
-    'title' => 'Menu trail by path',
-    'description' => 'Configure menu trail by path module.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('menu_trail_by_path_form'),
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-  return $items;
-}
-
-/**
- * Form builder; create and display the admin configuration settings form.
- */
-function menu_trail_by_path_form($form, &$form_state) {
-  $form['menu_trail_by_path_breadcrumb_handling'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable breadcrumb handling'),
-    '#description' => t("If checked, breadcrumb will be set according to url path."),
-    '#default_value' => variable_get('menu_trail_by_path_breadcrumb_handling', TRUE),
-  );
-  return system_settings_form($form);
-}
-
-/**
- * Returns an array of parent candidates
+ * Returns an array of parent candidates.
  *
- * e.g. given the argument 'foo/bar/zee', this returns an array of 
- * internal Drupal paths for 'foo', 'foo/bar', 'foo/bar/zee'.
+ * e.g. given the argument 'foo/bar/zee', this returns an array of internal
+ * Backdrop paths for 'foo', 'foo/bar', 'foo/bar/zee'.
  *
  * @param string $path
- *   A Drupal path alias.
+ *   A Backdrop path alias.
  *
  * @return array
- *   An array of internal Drupal paths.
+ *   An array of internal Backdrop paths.
  */
 function _menu_trail_by_path_get_parent_candidates($path) {
-  $pieces = explode('/', $path);
-  $path = '';
   $parent_candidates = array();
+  $pieces = explode('/', $path);
+
+  $path = '';
   foreach ($pieces as $piece) {
     $path .= $piece . '/';
-    $parent_candidates[] = drupal_get_normal_path(rtrim($path, '/'));
+    $parent_candidates[] = backdrop_get_normal_path(rtrim($path, '/'));
   }
+
   return $parent_candidates;
 }
+
