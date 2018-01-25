@@ -1,9 +1,9 @@
 name = Menu Trail By Path
 description = Expand menus and set active-trail according to the current path.
-type = module
 backdrop = 1.x
-package = System
+type = module
+package = Menu
 dependencies[] = menu
 dependencies[] = path
-configure = admin/config/system/menu_trail_by_path
-version = 1.x-1.0
+configure = admin/config/urls/menu_trail_by_path
+

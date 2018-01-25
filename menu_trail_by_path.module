@@ -20,7 +20,7 @@ function menu_trail_by_path_config_info() {
  * Implements hook_menu()
  */
 function menu_trail_by_path_menu() {
-  $items['admin/config/system/menu_trail_by_path'] = array(
+  $items['admin/config/urls/menu_trail_by_path'] = array(
     'title' => 'Menu trail by path',
     'description' => 'Configure menu trail by path module.',
     'page callback' => 'backdrop_get_form',
@@ -39,28 +39,12 @@ function menu_trail_by_path_form($form, &$form_state) {
   $form['breadcrumb_handling'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable breadcrumb handling'),
-    '#description' => t("If checked, breadcrumb will be set according to url path."),
+    '#description' => t("If checked, breadcrumb will be set according to URL path."),
     '#default_value' => config_get('menu_trail_by_path.settings', 'breadcrumb_handling'),
   );
+  $form['#config'] = 'menu_trail_by_path.settings';
 
-  // Add a submit button.
-  $form['actions'] = array(
-    '#type' => 'actions',
-    'submit' => array(
-      '#type' => 'submit',
-      '#value' => t('Save configuration'),
-    ),
-  );
-
-  return $form;
-}
-
-/**
- * Submit handler for menu_trail_by_path_form().
- */
-function menu_trail_by_path_form_submit($form, &$form_state) {
-  config_set('menu_trail_by_path.settings', 'breadcrumb_handling', $form_state['values']['breadcrumb_handling']);
-  backdrop_set_message(t('The configuration options have been saved.'));
+  return system_settings_form($form);
 }
 
 /**
@@ -127,6 +111,7 @@ function menu_trail_by_path_preprocess_block__system__main(&$variables) {
         $breadcrumbs[] = l($menu_item['title'], $link_path);
       }
     }
+
     backdrop_set_breadcrumb($breadcrumbs);
   }
 }
