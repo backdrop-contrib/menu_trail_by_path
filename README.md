@@ -2,18 +2,15 @@ Menu Trail by Path
 ==================
 
 Menu Trail by Path allows you to set the active-trail on menu items according to
-the current URL.
+the current URL. You can also optionally set the breadcrumb trail to the same.
 
-For example, if you are at yoursite.com/blog/category1/article1 then menu items
-with these paths will get the active-trail class on them and expand accordingly:
-
-- blog
-- blog/category1
-- blog/category1/article1
-
-This is particularly useful if you want a lot of nodes to appear as children of
-certain nodes/taxonomy terms/views/referenced nodes/etc., but do not want to add
-them all to the menu.
+Consider the following scenario:  
+You give your Post content type a URL pattern of `posts/[node:title]` and you
+disable its menu settings. You then create a view for your posts and give it a
+URL of `posts` and a link in the main menu.
+With this module, when you visit `posts/my-first-post`, the Posts menu item will
+have the active-trail class and (optionally) the breadcrumb trail will show:
+Home > Posts.
 
 
 Installation
