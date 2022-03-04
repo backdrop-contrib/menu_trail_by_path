@@ -83,7 +83,7 @@ function menu_trail_by_path_preprocess_block__system__main(&$variables) {
     if ($record->link_title && !isset($matched_link_titles[$record->link_path])) {
       $matched_link_titles[$record->link_path] = $record->link_title;
       if (module_exists('i18n_menu')) {
-        $matched_link_titles[$record->link_path] = _i18n_menu_link_title((array)$record, $language->language);
+        $matched_link_titles[$record->link_path] = _i18n_menu_link_title((array)$record, $language->langcode);
       }
     }
   }
