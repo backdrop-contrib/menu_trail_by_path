@@ -34,12 +34,11 @@ complete text.
 Current Maintainers
 -------------------
 
-- Peter Anderson (https://github.com/BWPanda)
+- Seeking maintainer(s)
 
 
 Credits
 -------
 
-This module was originally written for Drupal by Adam Moore
-(https://github.com/redndahead).
-
+- Ported to Backdrop CMS by [Peter Anderson](https://github.com/BWPanda).
+- Originally written for Drupal by [Adam Moore](https://github.com/redndahead).
